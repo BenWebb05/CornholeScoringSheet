@@ -1,15 +1,19 @@
-name: GitHub Pages
+name: Deploy GitHub Pages
 
 on:
   push:
     branches:
-      - main  # or master, use your default branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
