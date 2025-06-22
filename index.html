@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cornhole Scoreboard</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 10px; }
+  h1 { text-align: center; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  input[type=number] { width: 60px; }
+  .totals-row { font-weight: bold; background: #f0f0f0; }
+  .winner { font-size: 1.3em; font-weight: bold; text-align: center; margin-top: 20px; }
+  @media (max-width: 600px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead tr { display: none; }
+    tr { margin-bottom: 15px; }
+    td { text-align: right; padding-left: 50%; position: relative; }
+    td::before { 
+      content: attr(data-label); 
+      position: absolute; left: 10px; width: 45%; padding-left: 10px; font-weight: bold; text-align: left;
+    }
+    input[type=number] { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Cornhole Scoreboard</h1>
+
+<div>
+  <label>Player 1 Name: <input type="text" id="player1Name" value="Player 1" /></label>
+  &nbsp;&nbsp;&nbsp;
+  <label>Player 2 Name: <input type="text" id="player2Name" value="Player 2" /></label>
+</div>
+
+<table id="scoreTable" aria-label="Cornhole score input table">
+  <thead>
+    <tr>
+      <th>Round</th>
+      <th colspan="3" id="p1Header">Player 1</th>
+      <th colspan="3" id="p2Header">Player 2</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>Cornholes (3pts)</th>
+      <th>Bags on Board (1pt)</th>
+      <th>Misses (0pt)</th>
+      <th>Cornholes (3pts)</th>
+      <th>Bags on Board (1pt)</th>
+      <th>Misses (0pt)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- 10 rounds -->
+    <script>
+      for(let i=1; i<=10; i++) {
+        document.write('<tr>');
+        document.write('<td data-label="Round">'+i+'</td>');
+        // Player 1 inputs
+        document.write('<td data-label="P1 Cornholes"><input type="number" min="0" max="4" value="0" class="p1-cornholes" data-round="'+i+'"></td>');
+        document.write('<td data-label="P1 Bags on Board"><input type="number" min="0" max="4" value="0" class="p1-bags" data-round="'+i+'"></td>');
+        document.write('<td data-label="P1 Misses"><input type="number" min="0" max="4" value="0" class="p1-misses" data-round="'+i+'"></td>');
+        // Player 2 inputs
+        document.write('<td data-label="P2 Cornholes"><input type="number" min="0" max="4" value="0" class="p2-cornholes" data-round="'+i+'"></td>');
+        document.write('<td data-label="P2 Bags on Board"><input type="number" min="0" max="4" value="0" class="p2-bags" data-round="'+i+'"></td>');
+        document.write('<td data-label="P2 Misses"><input type="number" min="0" max="4" value="0" class="p2-misses" data-round="'+i+'"></td>');
+        document.write('</tr>');
+      }
+    </script>
+    <tr class="totals-row">
+      <td>Total</td>
+      <td id="p1TotalCornholes">0</td>
+      <td id="p1TotalBags">0</td>
+      <td id="p1TotalMisses">0</td>
+      <td id="p2TotalCornholes">0</td>
+      <td id="p2TotalBags">0</td>
+      <td id="p2TotalMisses">0</td>
+    </tr>
+    <tr class="totals-row">
+      <td>Points</td>
+      <td colspan="3" id="p1TotalPoints" style="text-align:left;">0</td>
+      <td colspan="3" id="p2TotalPoints" style="text-align:left;">0</td>
+    </tr>
+    <tr class="totals-row">
+      <td>Accuracy %</td>
+      <td colspan="3" id="p1Accuracy" style="text-align:left;">0%</td>
+      <td colspan="3" id="p2Accuracy" style="text-align:left;">0%</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="winner" id="winnerText">Winner: -</div>
+
+<script>
+  const inputs = document.querySelectorAll('input[type=number]');
+  const player1NameInput = document.getElementById('player1Name');
+  const player2NameInput = document.getElementById('player2Name');
+  const p1Header = document.getElementById('p1Header');
+  const p2Header = document.getElementById('p2Header');
+  const winnerText = document.getElementById('winnerText');
+
+  function calculateTotals() {
+    let p1Cornholes = 0, p1Bags = 0, p1Misses = 0;
+    let p2Cornholes = 0, p2Bags = 0, p2Misses = 0;
+
+    inputs.forEach(input => {
+      const val = Number(input.value) || 0;
+      if(input.classList.contains('p1-cornholes')) p1Cornholes += val;
+      else if(input.classList.contains('p1-bags')) p1Bags += val;
+      else if(input.classList.contains('p1-misses')) p1Misses += val;
+      else if(input.classList.contains('p2-cornholes')) p2Cornholes += val;
+      else if(input.classList.contains('p2-bags')) p2Bags += val;
+      else if(input.classList.contains('p2-misses')) p2Misses += val;
+    });
+
+    const p1Points = p1Cornholes*3 + p1Bags;
+    const p2Points = p2Cornholes*3 + p2Bags;
+
+    const p1Throws = p1Cornholes + p1Bags + p1Misses;
+    const p2Throws = p2Cornholes + p2Bags + p2Misses;
+
+    const p1Accuracy = p1Throws ? ((p1Cornholes + p1Bags)/p1Throws)*100 : 0;
+    const p2Accuracy = p2Throws ? ((p2Cornholes + p2Bags)/p2Throws)*100 : 0;
+
+    // Update totals in table
+    document.getElementById('p1TotalCornholes').textContent = p1Cornholes;
+    document.getElementById('p1TotalBags').textContent = p1Bags;
+    document.getElementById('p1TotalMisses').textContent = p1Misses;
+    document.getElementById('p2TotalCornholes').textContent = p2Cornholes;
+    document.getElementById('p2TotalBags').textContent = p2Bags;
+    document.getElementById('p2TotalMisses').textContent = p2Misses;
+
+    document.getElementById('p1TotalPoints').textContent = p1Points;
+    document.getElementById('p2TotalPoints').textContent = p2Points;
+
+    document.getElementById('p1Accuracy').textContent = p1Accuracy.toFixed(1) + '%';
+    document.getElementById('p2Accuracy').textContent = p2Accuracy.toFixed(1) + '%';
+
+    // Update headers with player names
+    p1Header.textContent = player1NameInput.value || "Player 1";
+    p2Header.textContent = player2NameInput.value || "Player 2";
+
+    // Update winner text
+    let winner = '-';
+    if(p1Points > p2Points) winner = player1NameInput.value || "Player 1";
+    else if(p2Points > p1Points) winner = player2NameInput.value || "Player 2";
+    else winner = "Tie";
+
+    winnerText.textContent = "Winner: " + winner;
+  }
+
+  inputs.forEach(input => input.addEventListener('input', calculateTotals));
+  player1NameInput.addEventListener('input', calculateTotals);
+  player2NameInput.addEventListener('input', calculateTotals);
+
+  // Initial calculation
+  calculateTotals();
+</script>
+
+</body>
+</html>
